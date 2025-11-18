@@ -1,8 +1,8 @@
 from typing import List, Type, TypeVar
 import requests
 
-from odc_sdk.models.public_endpoints import StatEndpoints
-from odc_sdk.models.stats_responses import UserStat, DatasetStat, LabStat, DownloadStat
+from ..models.public_endpoints import StatEndpoints
+from ..models.stats_responses import UserStat, DatasetStat, LabStat, DownloadStat
 
 
 T = TypeVar("T")  # create generic for stats_wrapper

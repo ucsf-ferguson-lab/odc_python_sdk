@@ -1,4 +1,3 @@
-from .configs import *
-
-from .logic import *
-from .models import *
+from odc_sdk import configs
+from odc_sdk import logic
+from odc_sdk import models
