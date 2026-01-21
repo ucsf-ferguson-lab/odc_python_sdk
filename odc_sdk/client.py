@@ -3,10 +3,9 @@ from .request_handler import RequestHandler
 from .endpoints import StatEndpoints
 
 
-# add new endpoints by append to hashmap + create wrapper function
 class StatsClient:
     """
-    Client to handle all public stats endpoints\n\n
+    Client to handle all public stats endpoints
     available methods: user_stats, dataset_stats, lab_stats, download_stats
     """
 
@@ -14,16 +13,29 @@ class StatsClient:
         self.endpoints = endpoints
         self.handler = RequestHandler()
 
-    def _fetch_stats(self, endpoint: str, response_type: Type[Any]) -> List[Any]:
+    def _fetch_stats(
+        self,
+        endpoint: str,
+        response_type: Type[Any],
+        retries: int = 3,
+        delay: int = 10,
+    ) -> List[Any]:
         """Generic fetch helper to retrieve stats and return as list"""
-        response = self.handler.get_response(endpoint)
+        response = self.handler.get_response(endpoint, retries=retries, delay=delay)
         if response.status_code == 200:
             data = response.json()
             return [response_type(**item) for item in data]
+
         print(f"Status code {response.status_code} received for {endpoint}")
         return []
 
-    def get_stats(self, stat_type: str, models_module) -> List[Any]:
+    def get_stats(
+        self,
+        stat_type: str,
+        models_module,
+        retries: int = 3,
+        delay: int = 10,
+    ) -> List[Any]:
         """Retrieve stats by name"""
         mapping = {
             "users": (self.endpoints.users_stats, models_module.UserStat),
@@ -36,17 +48,21 @@ class StatsClient:
             raise ValueError(f"Unknown stat type: {stat_type}")
 
         endpoint, model_cls = mapping[stat_type]
-        return self._fetch_stats(endpoint, model_cls)
+        return self._fetch_stats(endpoint, model_cls, retries=retries, delay=delay)
 
     # wrappers
-    def user_stats(self, models_module) -> List[Any]:
-        return self.get_stats("users", models_module)
+    def user_stats(self, models_module, retries: int = 3, delay: int = 10) -> List[Any]:
+        return self.get_stats("users", models_module, retries=retries, delay=delay)
 
-    def dataset_stats(self, models_module) -> List[Any]:
-        return self.get_stats("datasets", models_module)
+    def dataset_stats(
+        self, models_module, retries: int = 3, delay: int = 10
+    ) -> List[Any]:
+        return self.get_stats("datasets", models_module, retries=retries, delay=delay)
 
-    def lab_stats(self, models_module) -> List[Any]:
-        return self.get_stats("labs", models_module)
+    def lab_stats(self, models_module, retries: int = 3, delay: int = 10) -> List[Any]:
+        return self.get_stats("labs", models_module, retries=retries, delay=delay)
 
-    def download_stats(self, models_module) -> List[Any]:
-        return self.get_stats("downloads", models_module)
+    def download_stats(
+        self, models_module, retries: int = 3, delay: int = 10
+    ) -> List[Any]:
+        return self.get_stats("downloads", models_module, retries=retries, delay=delay)

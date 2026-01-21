@@ -1,3 +1,4 @@
+import time
 import requests
 import pandas as pd
 import json
@@ -7,14 +8,33 @@ T = TypeVar("T")
 
 
 class RequestHandler:
-    """Http requests"""
-
+    # basic retry default: 3 attempts, 10 sec between each attempt
+    # can override when called
     @staticmethod
-    def get_response(url: str) -> requests.Response:
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"Failed to retrieve data. Status code: {response.status_code}")
-        return response
+    def get_response(url: str, retries: int = 3, delay: int = 10) -> requests.Response:
+        last_exc: Exception | None = None
+
+        for attempt in range(1, retries + 1):
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    return response
+                print(
+                    f"Attempt {attempt}/{retries} failed for {url} "
+                    f"with status {response.status_code}"
+                )
+            except requests.RequestException as exc:
+                last_exc = exc
+                print(f"Attempt {attempt}/{retries} raised exception for {url}: {exc}")
+
+            if attempt < retries:
+                time.sleep(delay)
+
+        if last_exc:
+            raise last_exc
+        raise RuntimeError(
+            f"Failed to retrieve data from {url} after {retries} attempts"
+        )
 
     @staticmethod
     def unmarshal_json(response: requests.Response, struct_type: Type[T]) -> T | None:
